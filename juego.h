@@ -9,10 +9,14 @@
 #include <ctime>
 #include <algorithm>
 #include <random>
+#include <limits>
 #ifdef _WIN32
 #include <windows.h>
+#include <conio.h>
 #else
 #include <unistd.h>
+#include <termios.h>
+#include <sys/select.h>
 #endif
 
 // Estados posibles
@@ -160,6 +164,8 @@ private:
     std::unordered_map<std::string, std::vector<std::string>> transicionesNFA;
     int rondaActual;
     int nodoActual;
+    std::vector<TipoDificultad> historialDificultades;
+    std::vector<bool> historialResultados;
 
 public:
     Juego404();
@@ -175,6 +181,12 @@ public:
     void verificarResultado();
     void mostrarEstadisticasJuego() const;
     void analizarEstrategias() const;
+    void mostrarResumenEstrategico() const;
+    void mostrarMenuFinal();
+    void limpiarPantalla() const;
+    int validarEntradaNumerica(const std::string& mensaje, int minimo, int maximo) const;
+    bool validarEntradaSiNo(const std::string& mensaje) const;
+    char getchMultiplataforma() const;
 };
 
 #endif

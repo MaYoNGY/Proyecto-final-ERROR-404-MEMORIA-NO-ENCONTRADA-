@@ -70,19 +70,22 @@ void Juego404::actualizarEstado() {
             procesarTurnoJugador1();
             estadoActual = REPETICION_SECUENCIA;
             
-            std::cout << "\nPresiona ENTER para continuar al turno del Jugador 2...";
-            std::cin.ignore();
-            std::cin.get();
+            std::cout << "\nPresiona cualquier tecla para continuar al turno del Jugador 2...";
+            getchMultiplataforma();
+            limpiarPantalla();
             break;
             
         case REPETICION_SECUENCIA:
+            // Limpiar pantalla antes del turno del Jugador 2
+            limpiarPantalla();
+            
             std::cout << "\n=== ESTADO: REPETICIÓN DE SECUENCIA ===\n";
             procesarTurnoJugador2();
             estadoActual = VERIFICACION;
             
-            std::cout << "\nPresiona ENTER para ver la verificación...";
-            std::cin.ignore();
-            std::cin.get();
+            std::cout << "\nPresiona cualquier tecla para ver la verificación...";
+            getchMultiplataforma();
+            limpiarPantalla();
             break;
             
         case VERIFICACION:
@@ -97,23 +100,25 @@ void Juego404::actualizarEstado() {
             rondaActual++;
             
             if (rondaActual < 3) { // Jugar máximo 3 rondas
-                std::cout << "\n¿Continuar con la ronda " << (rondaActual + 1) << "? (s/n): ";
-                char continuar;
-                std::cin >> continuar;
+                std::cout << "\n¿Continuar con la ronda " << (rondaActual + 1) << "? (S/N): ";
+                bool continuar = validarEntradaSiNo("");
                 
-                if (continuar == 's' || continuar == 'S') {
+                if (continuar) {
                     estadoActual = DECISION_DIFICULTAD;
+                    limpiarPantalla();
                     std::cout << "\n" << std::string(50, '=') << "\n";
                     std::cout << "INICIANDO RONDA " << (rondaActual + 1) << "\n";
                     std::cout << std::string(50, '=') << "\n";
                 } else {
+                    limpiarPantalla();
                     std::cout << "\nJuego terminado por decisión del jugador.\n";
-                    mostrarEstadisticasJuego();
+                    mostrarMenuFinal();
                     rondaActual = 3; // Forzar fin del juego
                 }
             } else {
+                limpiarPantalla();
                 std::cout << "\n🏁 ¡JUEGO TERMINADO! 🏁\n";
-                mostrarEstadisticasJuego();
+                mostrarMenuFinal();
             }
             break;
             
@@ -127,44 +132,33 @@ void Juego404::procesarTurnoJugador1() {
     std::cout << "Secuencia actual: ";
     secuenciaActual->mostrarSecuencia();
     
-    // Mostrar análisis estratégico
-    double probabilidadExitoJ2 = calculadorBayes->calcularProbabilidadCondicional(jugadores[1], FACIL);
-    std::cout << "\nAnálisis estratégico:\n";
-    std::cout << "- Probabilidad de éxito de J2 en modo FÁCIL: " << (probabilidadExitoJ2 * 100) << "%\n";
-    
-    double probabilidadExitoJ2Dificil = calculadorBayes->calcularProbabilidadCondicional(jugadores[1], DIFICIL);
-    std::cout << "- Probabilidad de éxito de J2 en modo DIFÍCIL: " << (probabilidadExitoJ2Dificil * 100) << "%\n";
-    
-    // Mostrar ganancias esperadas
-    auto gananciasFacilFallo = matrizGanancias->obtenerGanancias(FACIL, false);
-    auto gananciasFacilExito = matrizGanancias->obtenerGanancias(FACIL, true);
-    auto gananciasDificilFallo = matrizGanancias->obtenerGanancias(DIFICIL, false);
-    auto gananciasDificilExito = matrizGanancias->obtenerGanancias(DIFICIL, true);
-    
-    std::cout << "\nGanancias esperadas:\n";
-    std::cout << "FÁCIL  - Si J2 falla: J1=+" << gananciasFacilFallo.first << ", J2=+" << gananciasFacilFallo.second << "\n";
-    std::cout << "FÁCIL  - Si J2 acierta: J1=+" << gananciasFacilExito.first << ", J2=+" << gananciasFacilExito.second << "\n";
-    std::cout << "DIFÍCIL - Si J2 falla: J1=+" << gananciasDificilFallo.first << ", J2=+" << gananciasDificilFallo.second << "\n";
-    std::cout << "DIFÍCIL - Si J2 acierta: J1=+" << gananciasDificilExito.first << ", J2=+" << gananciasDificilExito.second << "\n";
-    
-    // Permitir al jugador elegir
+    // Permitir al jugador elegir sin mostrar análisis estratégico
     int eleccion;
     do {
         std::cout << "\nJugador 1, elige la dificultad para el próximo color:\n";
         std::cout << "1. FÁCIL (patrón predecible)\n";
         std::cout << "2. DIFÍCIL (patrón aleatorio)\n";
-        std::cout << "Ingresa tu elección (1 o 2): ";
-        std::cin >> eleccion;
         
-        if (eleccion != 1 && eleccion != 2) {
-            std::cout << "Opción inválida. Por favor, elige 1 o 2.\n";
+        eleccion = validarEntradaNumerica("Ingresa tu elección (1 o 2): ", 1, 2);
+        
+        if (eleccion == -1) {
+            // Si se canceló, usar FACIL por defecto
+            eleccion = 1;
+            std::cout << "Usando dificultad FÁCIL por defecto.\n";
         }
+        
     } while (eleccion != 1 && eleccion != 2);
     
     TipoDificultad dificultadElegida = (eleccion == 1) ? FACIL : DIFICIL;
     secuenciaActual->establecerDificultad(dificultadElegida);
     
+    // Almacenar la decisión para el resumen final
+    historialDificultades.push_back(dificultadElegida);
+    
     std::cout << "\nJ1 eligió: " << (dificultadElegida == FACIL ? "FÁCIL" : "DIFÍCIL") << "\n";
+    
+    // Limpiar la pantalla después de la elección
+    limpiarPantalla();
     
     // Agregar nuevo color según la dificultad
     Color nuevoColor = secuenciaActual->generarSiguienteColor(dificultadElegida);
@@ -200,9 +194,10 @@ void Juego404::procesarTurnoJugador2() {
     // Mostrar la secuencia por un tiempo limitado
     std::cout << "\n¡MEMORIZA LA SECUENCIA!\n";
     std::cout << "La secuencia se mostrará por 3 segundos...\n";
-    std::cout << "\nPresiona ENTER para ver la secuencia: ";
-    std::cin.ignore();
-    std::cin.get();
+    std::cout << "\nPresiona cualquier tecla para ver la secuencia: ";
+    
+    // Limpiar buffer de entrada y esperar cualquier tecla
+    getchMultiplataforma();
     
     // Mostrar secuencia
     std::cout << "\n*** SECUENCIA A MEMORIZAR ***\n";
@@ -220,8 +215,9 @@ void Juego404::procesarTurnoJugador2() {
         #endif
     }
     
-    // Limpiar pantalla (simulado)
-    std::cout << "\n\n\n\n\n\n\n\n\n\n";
+    // Limpiar pantalla
+    limpiarPantalla();
+    
     std::cout << "*** TIEMPO TERMINADO ***\n";
     std::cout << "Ahora ingresa la secuencia que memorizaste:\n\n";
     
@@ -240,12 +236,14 @@ void Juego404::procesarTurnoJugador2() {
     for (size_t i = 0; i < secuenciaOriginal.size(); i++) {
         int colorElegido;
         do {
-            std::cout << "Color " << (i + 1) << ": ";
-            std::cin >> colorElegido;
+            colorElegido = validarEntradaNumerica("Color " + std::to_string(i + 1) + " (1-4): ", 1, 4);
             
-            if (colorElegido < 1 || colorElegido > 4) {
-                std::cout << "Número inválido. Usa 1-4.\n";
+            if (colorElegido == -1) {
+                // Si se canceló, usar ROJO por defecto
+                colorElegido = 1;
+                std::cout << "Usando ROJO por defecto.\n";
             }
+            
         } while (colorElegido < 1 || colorElegido > 4);
         
         secuenciaJugador.push_back(static_cast<Color>(colorElegido - 1));
@@ -274,6 +272,9 @@ void Juego404::procesarTurnoJugador2() {
     } else {
         std::cout << "\n❌ INCORRECTO. La secuencia no coincide.\n";
     }
+    
+    // Almacenar el resultado para el resumen final
+    historialResultados.push_back(exito);
     
     // Registrar el resultado en el historial
     jugadores[1].agregarAcierto(exito);
@@ -369,6 +370,339 @@ void Juego404::analizarEstrategias() const {
     equilibrioNash->analizarEstrategias();
 }
 
+void Juego404::limpiarPantalla() const {
+    #ifdef _WIN32
+        system("cls");
+    #else
+        system("clear");
+    #endif
+}
+
+char Juego404::getchMultiplataforma() const {
+    #ifdef _WIN32
+        char ch = _getch();
+        // En Windows, filtrar teclas especiales que pueden causar problemas
+        if (ch == 0 || ch == -32) { // Teclas especiales como flechas, F1-F12, etc.
+            _getch(); // Leer el segundo byte y descartarlo
+            return '\0'; // Retornar caracter nulo para indicar tecla especial
+        }
+        
+        // Filtrar caracteres de control adicionales (excepto ESC y Enter)
+        if ((ch < 32 && ch != 27) || ch == 127) { // Caracteres de control
+            return '\0'; // Ignorar caracteres de control
+        }
+        
+        return ch;
+    #else
+        struct termios oldt, newt;
+        char ch;
+        tcgetattr(STDIN_FILENO, &oldt);
+        newt = oldt;
+        newt.c_lflag &= ~(ICANON | ECHO);
+        tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+        ch = getchar();
+        tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+        
+        // En Linux, filtrar secuencias de escape y caracteres de control
+        if (ch == 27) {
+            // Verificar si hay más caracteres en el buffer (secuencia de escape)
+            fd_set readfds;
+            struct timeval timeout;
+            FD_ZERO(&readfds);
+            FD_SET(STDIN_FILENO, &readfds);
+            timeout.tv_sec = 0;
+            timeout.tv_usec = 1000; // 1ms timeout
+            
+            if (select(STDIN_FILENO + 1, &readfds, NULL, NULL, &timeout) > 0) {
+                // Hay más caracteres, es una secuencia de escape
+                char buffer[10];
+                read(STDIN_FILENO, buffer, sizeof(buffer)); // Leer y descartar
+                return '\0'; // Retornar caracter nulo para indicar tecla especial
+            }
+            // Si no hay más caracteres, es ESC puro
+            return ch;
+        }
+        
+        // Filtrar otros caracteres de control (excepto Enter y ESC)
+        if ((ch < 32 && ch != 27) || ch == 127) {
+            return '\0'; // Ignorar caracteres de control
+        }
+        
+        return ch;
+    #endif
+}
+
+int Juego404::validarEntradaNumerica(const std::string& mensaje, int minimo, int maximo) const {
+    char tecla;
+    int numero = -1;
+    
+    std::cout << mensaje;
+    std::cout.flush();
+    
+    while (true) {
+        tecla = getchMultiplataforma();
+        
+        // Ignorar completamente teclas especiales (retornadas como '\0')
+        if (tecla == '\0') {
+            continue; // Simplemente ignorar y continuar, sin sonido ni mensaje
+        }
+        
+        // Solo procesar dígitos válidos
+        if (tecla >= '0' && tecla <= '9') {
+            numero = tecla - '0';
+            
+            // Verificar si está en el rango permitido
+            if (numero >= minimo && numero <= maximo) {
+                std::cout << tecla << std::endl;
+                return numero;
+            }
+            // Si está fuera del rango, ignorar completamente (sin sonido)
+        } else if (tecla == 27) { // Tecla ESC
+            std::cout << "\nOperación cancelada.\n";
+            return -1;
+        }
+        // Para cualquier otra tecla, no hacer absolutamente nada
+        // No emitir sonido, no mostrar mensaje, simplemente ignorar
+    }
+}
+
+bool Juego404::validarEntradaSiNo(const std::string& mensaje) const {
+    char tecla;
+    
+    std::cout << mensaje;
+    std::cout.flush();
+    
+    while (true) {
+        tecla = getchMultiplataforma();
+        
+        // Ignorar completamente teclas especiales (retornadas como '\0')
+        if (tecla == '\0') {
+            continue; // Simplemente ignorar y continuar, sin sonido ni mensaje
+        }
+        
+        // Convertir a minúscula para facilitar la comparación
+        char teclaLower = tolower(tecla);
+        
+        // Solo procesar S o N
+        if (teclaLower == 's') {
+            std::cout << tecla << " (Sí)" << std::endl;
+            return true;
+        } else if (teclaLower == 'n') {
+            std::cout << tecla << " (No)" << std::endl;
+            return false;
+        } else if (tecla == 27) { // Tecla ESC
+            std::cout << "\nOperación cancelada. Asumiendo 'No'.\n";
+            return false;
+        }
+        // Para cualquier otra tecla, no hacer absolutamente nada
+        // No emitir sonido, no mostrar mensaje, simplemente ignorar
+    }
+}
+
+void Juego404::mostrarMenuFinal() {
+    mostrarEstadisticasJuego();
+    
+    std::cout << "\n" << std::string(50, '=') << "\n";
+    std::cout << "               MENÚ FINAL\n";
+    std::cout << std::string(50, '=') << "\n";
+    std::cout << "1. Ver resumen de análisis estratégico\n";
+    std::cout << "2. Ver análisis detallado de equilibrios Nash\n";
+    std::cout << "3. Ver simulaciones NFA\n";
+    std::cout << "4. Salir\n";
+    std::cout << std::string(50, '=') << "\n";
+    
+    int opcion;
+    do {
+        opcion = validarEntradaNumerica("\nSelecciona una opción (1-4): ", 1, 4);
+        
+        if (opcion == -1) {
+            // Si se canceló, salir
+            opcion = 4;
+            std::cout << "Saliendo...\n";
+        }
+        
+        switch (opcion) {
+            case 1:
+                limpiarPantalla();
+                mostrarResumenEstrategico();
+                break;
+            case 2:
+                limpiarPantalla();
+                std::cout << "\n=== ANÁLISIS ESTRATÉGICO AVANZADO ===\n";
+                analizarEstrategias();
+                break;
+            case 3:
+                limpiarPantalla();
+                std::cout << "\n=== SIMULACIONES NFA ===\n";
+                simularNFA("memoria");
+                simularNFA("adivinar");
+                simularNFA("iniciar");
+                simularNFA("finalizar");
+                break;
+            case 4:
+                limpiarPantalla();
+                std::cout << "\n¡Gracias por jugar ERROR 404: Memoria no encontrada!\n";
+                return;
+            default:
+                std::cout << "Opción inválida. Selecciona 1-4.\n";
+                std::cout << "Presiona cualquier tecla para continuar...";
+                getchMultiplataforma();
+                limpiarPantalla();
+                mostrarEstadisticasJuego();
+                std::cout << "\n" << std::string(50, '=') << "\n";
+                std::cout << "               MENÚ FINAL\n";
+                std::cout << std::string(50, '=') << "\n";
+                std::cout << "1. Ver resumen de análisis estratégico\n";
+                std::cout << "2. Ver análisis detallado de equilibrios Nash\n";
+                std::cout << "3. Ver simulaciones NFA\n";
+                std::cout << "4. Salir\n";
+                std::cout << std::string(50, '=') << "\n";
+                break;
+        }
+        
+        if (opcion != 4) {
+            opcion = validarEntradaNumerica("\n¿Deseas ver otra opción? (1-3 para opciones, 4 para salir): ", 1, 4);
+            if (opcion == -1) opcion = 4; // Si se cancela, salir
+        }
+        
+    } while (opcion != 4);
+}
+
+void Juego404::mostrarResumenEstrategico() const {
+    std::cout << "\n" << std::string(60, '=') << "\n";
+    std::cout << "           RESUMEN DE ANÁLISIS ESTRATÉGICO\n";
+    std::cout << std::string(60, '=') << "\n";
+    
+    // Análisis de decisiones del Jugador 1
+    int decisionesFaciles = 0;
+    int decisionesDificiles = 0;
+    
+    for (const TipoDificultad& dif : historialDificultades) {
+        if (dif == FACIL) {
+            decisionesFaciles++;
+        } else {
+            decisionesDificiles++;
+        }
+    }
+    
+    std::cout << "\n📊 ANÁLISIS DE ESTRATEGIA DEL JUGADOR 1:\n";
+    std::cout << "• Total de decisiones tomadas: " << historialDificultades.size() << "\n";
+    std::cout << "• Decisiones FÁCIL: " << decisionesFaciles << " (" << 
+                 (historialDificultades.empty() ? 0 : (decisionesFaciles * 100 / historialDificultades.size())) << "%)\n";
+    std::cout << "• Decisiones DIFÍCIL: " << decisionesDificiles << " (" <<
+                 (historialDificultades.empty() ? 0 : (decisionesDificiles * 100 / historialDificultades.size())) << "%)\n";
+    
+    // Determinar patrón estratégico
+    std::cout << "\n🎯 PATRÓN ESTRATÉGICO IDENTIFICADO:\n";
+    if (decisionesFaciles > decisionesDificiles) {
+        std::cout << "• Jugador 1 adoptó una estrategia CONSERVADORA\n";
+        std::cout << "• Prefirió dar ventaja al oponente para obtener ganancias moderadas\n";
+        std::cout << "• Riesgo: Bajo | Recompensa: Moderada\n";
+    } else if (decisionesDificiles > decisionesFaciles) {
+        std::cout << "• Jugador 1 adoptó una estrategia AGRESIVA\n";
+        std::cout << "• Priorizó maximizar sus ganancias dificultando al oponente\n";
+        std::cout << "• Riesgo: Alto | Recompensa: Alta\n";
+    } else {
+        std::cout << "• Jugador 1 adoptó una estrategia EQUILIBRADA\n";
+        std::cout << "• Balanceó entre cooperación y competencia\n";
+        std::cout << "• Riesgo: Moderado | Recompensa: Variable\n";
+    }
+    
+    // Análisis de rendimiento del Jugador 2
+    int aciertos = 0;
+    int fallos = 0;
+    
+    for (bool resultado : historialResultados) {
+        if (resultado) {
+            aciertos++;
+        } else {
+            fallos++;
+        }
+    }
+    
+    std::cout << "\n🎮 ANÁLISIS DE RENDIMIENTO DEL JUGADOR 2:\n";
+    std::cout << "• Secuencias intentadas: " << historialResultados.size() << "\n";
+    std::cout << "• Aciertos: " << aciertos << "\n";
+    std::cout << "• Fallos: " << fallos << "\n";
+    std::cout << "• Tasa de éxito: " << (historialResultados.empty() ? 0 : (aciertos * 100 / historialResultados.size())) << "%\n";
+    
+    // Análisis de correlación (datos estáticos basados en decisiones)
+    std::cout << "\n🔍 ANÁLISIS DE CORRELACIÓN ESTRATÉGICA:\n";
+    
+    // Calcular rendimiento por tipo de dificultad
+    int aciertos_facil = 0, intentos_facil = 0;
+    int aciertos_dificil = 0, intentos_dificil = 0;
+    
+    for (size_t i = 0; i < std::min(historialDificultades.size(), historialResultados.size()); i++) {
+        if (historialDificultades[i] == FACIL) {
+            intentos_facil++;
+            if (historialResultados[i]) aciertos_facil++;
+        } else {
+            intentos_dificil++;
+            if (historialResultados[i]) aciertos_dificil++;
+        }
+    }
+    
+    std::cout << "• Rendimiento en modo FÁCIL: " << aciertos_facil << "/" << intentos_facil;
+    if (intentos_facil > 0) {
+        std::cout << " (" << (aciertos_facil * 100 / intentos_facil) << "%)";
+    }
+    std::cout << "\n";
+    
+    std::cout << "• Rendimiento en modo DIFÍCIL: " << aciertos_dificil << "/" << intentos_dificil;
+    if (intentos_dificil > 0) {
+        std::cout << " (" << (aciertos_dificil * 100 / intentos_dificil) << "%)";
+    }
+    std::cout << "\n";
+    
+    // Probabilidades bayesianas estimadas (datos estáticos)
+    std::cout << "\n📈 PROBABILIDADES BAYESIANAS ESTIMADAS:\n";
+    double prob_exito_facil = (intentos_facil > 0) ? (double)aciertos_facil / intentos_facil : 0.75;
+    double prob_exito_dificil = (intentos_dificil > 0) ? (double)aciertos_dificil / intentos_dificil : 0.35;
+    
+    std::cout << "• P(Éxito|Fácil) = " << (prob_exito_facil * 100) << "%\n";
+    std::cout << "• P(Éxito|Difícil) = " << (prob_exito_dificil * 100) << "%\n";
+    std::cout << "• Diferencial de dificultad: " << ((prob_exito_facil - prob_exito_dificil) * 100) << " puntos porcentuales\n";
+    
+    // Análisis de equilibrio Nash (datos estáticos)
+    std::cout << "\n⚖️ ANÁLISIS DE EQUILIBRIO NASH:\n";
+    if (decisionesFaciles > decisionesDificiles && aciertos > fallos) {
+        std::cout << "• Estado: EQUILIBRIO COOPERATIVO alcanzado\n";
+        std::cout << "• J1 facilitó el juego y J2 respondió positivamente\n";
+        std::cout << "• Resultado: Beneficio mutuo moderado\n";
+    } else if (decisionesDificiles > decisionesFaciles && fallos > aciertos) {
+        std::cout << "• Estado: EQUILIBRIO COMPETITIVO alcanzado\n";
+        std::cout << "• J1 maximizó dificultad, J2 tuvo bajo rendimiento\n";
+        std::cout << "• Resultado: J1 obtiene ventaja significativa\n";
+    } else {
+        std::cout << "• Estado: EQUILIBRIO MIXTO\n";
+        std::cout << "• Estrategias variables llevaron a resultados fluctuantes\n";
+        std::cout << "• Resultado: Competencia balanceada\n";
+    }
+    
+    // Recomendaciones estratégicas
+    std::cout << "\n💡 RECOMENDACIONES ESTRATÉGICAS:\n";
+    std::cout << "Para Jugador 1:\n";
+    if (jugadores[0].getPuntaje() < jugadores[1].getPuntaje()) {
+        std::cout << "• Considera aumentar la proporción de decisiones DIFÍCILES\n";
+        std::cout << "• Tu estrategia actual no está maximizando tus ganancias\n";
+    } else {
+        std::cout << "• Tu estrategia actual está siendo efectiva\n";
+        std::cout << "• Mantén el equilibrio entre cooperación y competencia\n";
+    }
+    
+    std::cout << "\nPara Jugador 2:\n";
+    if (aciertos < fallos) {
+        std::cout << "• Practica técnicas de memorización a corto plazo\n";
+        std::cout << "• Considera usar patrones mnemotécnicos\n";
+    } else {
+        std::cout << "• Excelente capacidad de memorización demostrada\n";
+        std::cout << "• Mantén la concentración en secuencias largas\n";
+    }
+    
+    std::cout << "\n" << std::string(60, '=') << "\n";
+}
+
 int main() {
     Juego404 juego;
     juego.mostrarPantallaInicio();
@@ -381,40 +715,24 @@ int main() {
     std::cout << "- Se jugarán hasta 3 rondas\n";
     std::cout << "- El jugador con más puntos al final gana\n\n";
     
-    std::cout << "¿Están listos para comenzar? (s/n): ";
-    char comenzar;
-    std::cin >> comenzar;
+    std::cout << "¿Están listos para comenzar? (S/N): ";
+    bool comenzar = juego.validarEntradaSiNo("");
     
-    if (comenzar != 's' && comenzar != 'S') {
+    if (!comenzar) {
         std::cout << "¡Hasta luego!\n";
         return 0;
     }
+    
+    // Limpiar pantalla después de elegir iniciar
+    juego.limpiarPantalla();
     
     juego.inicializarJuego();
     
     // Ejecutar el juego
     juego.jugarRonda();
     
-    // Preguntar si quieren ver análisis adicional
-    std::cout << "\n¿Quieren ver el análisis estratégico detallado? (s/n): ";
-    char verAnalisis;
-    std::cin >> verAnalisis;
-    
-    if (verAnalisis == 's' || verAnalisis == 'S') {
-        std::cout << "\n=== ANÁLISIS ESTRATÉGICO AVANZADO ===\n";
-        juego.analizarEstrategias();
-        
-        std::cout << "\n=== SIMULACIONES NFA ===\n";
-        juego.simularNFA("memoria");
-        juego.simularNFA("adivinar");
-        juego.simularNFA("iniciar");
-        juego.simularNFA("finalizar");
-    }
-    
-    std::cout << "\n¡Gracias por jugar ERROR 404: Memoria no encontrada!\n";
-    std::cout << "Presiona ENTER para salir...";
-    std::cin.ignore();
-    std::cin.get();
+    std::cout << "\nPresiona cualquier tecla para salir...";
+    juego.getchMultiplataforma();
 
     return 0;
 }
