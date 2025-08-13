@@ -52,10 +52,14 @@ std::string Secuencia::colorToString(Color color) const {
 void Secuencia::mostrarSecuencia() const {
     std::cout << "Secuencia actual: ";
     for (size_t i = 0; i < colores.size(); i++) {
-        std::cout << colorToString(colores[i]);
-        if (i < colores.size() - 1) std::cout << " -> ";
+        ColoresConsola::mostrarColorConTexto(colores[i], colorToString(colores[i]));
+        if (i < colores.size() - 1) {
+            ColoresConsola::restablecerColor();
+            std::cout << " -> ";
+        }
     }
-    std::cout << "\nDificultad: " << (dificultadActual == FACIL ? "FÁCIL" : "DIFÍCIL") << "\n";
+    ColoresConsola::restablecerColor();
+    std::cout << "\nDificultad: " << (dificultadActual == FACIL ? "FACIL" : "DIFICIL") << "\n";
 }
 
 bool Secuencia::validarSecuencia(const std::vector<Color>& intento) const {

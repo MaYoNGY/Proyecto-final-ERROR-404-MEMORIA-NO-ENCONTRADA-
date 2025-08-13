@@ -43,12 +43,12 @@ std::vector<bool> Jugador::getHistorialAciertos() const {
 }
 
 void Jugador::mostrarEstadisticas() const {
-    std::cout << "\n=== Estadísticas Jugador " << id << " ===\n";
+    std::cout << "\n=== Estadisticas Jugador " << id << " ===\n";
     std::cout << "Puntaje actual: " << puntaje << "\n";
     std::cout << "Partidas jugadas: " << historialAciertos.size() << "\n";
     
     if (!historialAciertos.empty()) {
-        std::cout << "Tasa de éxito: " << (getTasaExito() * 100) << "%\n";
+        std::cout << "Tasa de exito: " << (getTasaExito() * 100) << "%\n";
         
         int aciertosFacil = 0, totalFacil = 0;
         int aciertosDificil = 0, totalDificil = 0;
@@ -64,10 +64,10 @@ void Jugador::mostrarEstadisticas() const {
         }
         
         if (totalFacil > 0) {
-            std::cout << "Éxito en modo fácil: " << (static_cast<double>(aciertosFacil) / totalFacil * 100) << "%\n";
+            std::cout << "Exito en modo facil: " << (static_cast<double>(aciertosFacil) / totalFacil * 100) << "%\n";
         }
         if (totalDificil > 0) {
-            std::cout << "Éxito en modo difícil: " << (static_cast<double>(aciertosDificil) / totalDificil * 100) << "%\n";
+            std::cout << "Exito en modo dificil: " << (static_cast<double>(aciertosDificil) / totalDificil * 100) << "%\n";
         }
     }
     std::cout << "========================\n";

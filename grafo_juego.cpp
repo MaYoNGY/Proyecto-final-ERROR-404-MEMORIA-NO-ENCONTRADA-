@@ -51,7 +51,7 @@ void GrafoJuego::mostrarGrafo() const {
         std::cout << "  Secuencia: ";
         
         if (nodo.secuencia.empty()) {
-            std::cout << "[vacía]";
+            std::cout << "[vacia]";
         } else {
             for (size_t j = 0; j < nodo.secuencia.size(); j++) {
                 std::string colorStr;
@@ -65,8 +65,8 @@ void GrafoJuego::mostrarGrafo() const {
                 if (j < nodo.secuencia.size() - 1) std::cout << "->";
             }
         }
-        
-        std::cout << "\n  Dificultad: " << (nodo.dificultad == FACIL ? "FÁCIL" : "DIFÍCIL");
+
+        std::cout << "\n  Dificultad: " << (nodo.dificultad == FACIL ? "FACIL" : "DIFICIL");
         std::cout << "\n  Puntajes: J1=" << nodo.puntajeJugador1 << ", J2=" << nodo.puntajeJugador2;
         
         std::cout << "\n  Transiciones:";
@@ -76,7 +76,7 @@ void GrafoJuego::mostrarGrafo() const {
             for (const Arista& arista : adyacencias[i]) {
                 std::cout << "\n    -> Nodo " << arista.destino 
                           << " (Utilidad: " << arista.utilidad 
-                          << ", Acción: " << arista.accion << ")";
+                          << ", Accion: " << arista.accion << ")";
             }
         }
         std::cout << "\n";
